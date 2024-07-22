@@ -1,0 +1,47 @@
+import sys
+import clr  # pythonnet library
+import tkinter as tk
+from tkinter import filedialog
+
+# Add Bartender .NET SDK reference
+clr.AddReference('C:\Program Files\Seagull\BarTender 2021\SDK\Assemblies\Seagull.BarTender.Print.dll')
+from Seagull.BarTender.Print import Engine, LabelFormatDocument
+
+class BartenderApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Bartender Label Printer")
+
+        self.label_file = tk.StringVar()
+
+        tk.Label(root, text="Bartender Label File:").grid(row=0, column=0, padx=10, pady=10)
+        tk.Entry(root, textvariable=self.label_file, width=50).grid(row=0, column=1, padx=10, pady=10)
+        tk.Button(root, text="Browse", command=self.browse_file).grid(row=0, column=2, padx=10, pady=10)
+        tk.Button(root, text="Print Label", command=self.print_label).grid(row=1, column=0, columnspan=3, pady=10)
+
+    def browse_file(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Bartender Files", "*.btw")])
+        self.label_file.set(file_path)
+
+    def print_label(self):
+        if not self.label_file.get():
+            tk.messagebox.showerror("Error", "Please select a label file")
+            return
+
+        # Initialize Bartender Engine
+        engine = Engine(True)
+        format = engine.Documents.Open(self.label_file.get())
+
+        try:
+            format.Print()
+            tk.messagebox.showinfo("Success", "Label printed successfully")
+        except Exception as e:
+            tk.messagebox.showerror("Error", str(e))
+        finally:
+            format.Close(False)
+            engine.Stop()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = BartenderApp(root)
+    root.mainloop()
